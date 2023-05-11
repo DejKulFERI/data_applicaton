@@ -4,8 +4,11 @@ import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:io';
 
-void main() {
+void main() async {
+  Socket socket = await Socket.connect('164.8.209.117', 8080);
+  socket.write('Hello, server!');
   runApp(const MyApp());
 }
 
