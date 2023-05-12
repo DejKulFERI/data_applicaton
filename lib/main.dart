@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
-import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 
 void main() async {
@@ -41,13 +39,14 @@ class _MyHomePageState extends State<MyHomePage> {
   String _currentTime = "";
   String _currentLocation = "";
   Timer? _timer;
+  Position? _currentPosition;
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(Duration(seconds: 1), (Timer t) {
+    _getCurrentLocation();
+    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
       _getCurrentTime();
-      _getCurrentLocation();
     });
 
     accelerometerEvents.listen((AccelerometerEvent event) {
@@ -63,7 +62,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
 
     _getCurrentTime();
-    _getCurrentLocation();
   }
 
   @override
@@ -72,7 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  IconData _icon = Icons.code;
+  final IconData _icon = Icons.code;
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 Text(
-                  '${_accelerometerValues[0].toStringAsFixed(2)}',
+                  _accelerometerValues[0].toStringAsFixed(2),
                   style: const TextStyle(
                     color: Color.fromRGBO(255, 0, 0, 1),
                     fontSize: 16,
@@ -128,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 Text(
-                  '${_accelerometerValues[1].toStringAsFixed(2)}',
+                  _accelerometerValues[1].toStringAsFixed(2),
                   style: const TextStyle(
                     color: Color.fromRGBO(30, 179, 0, 1),
                     fontSize: 16,
@@ -150,7 +148,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 Text(
-                  '${_accelerometerValues[2].toStringAsFixed(2)}',
+                  _accelerometerValues[2].toStringAsFixed(2),
                   style: const TextStyle(
                     color: Color.fromRGBO(0, 191, 229, 1),
                     fontSize: 16,
@@ -180,7 +178,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 Text(
-                  '${_gyroscopeValues[0].toStringAsFixed(2)}',
+                  _gyroscopeValues[0].toStringAsFixed(2),
                   style: const TextStyle(
                     color: Color.fromRGBO(255, 0, 0, 1),
                     fontSize: 16,
@@ -202,7 +200,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 Text(
-                  '${_gyroscopeValues[1].toStringAsFixed(2)}',
+                  _gyroscopeValues[1].toStringAsFixed(2),
                   style: const TextStyle(
                     color: Color.fromRGBO(30, 179, 0, 1),
                     fontSize: 16,
@@ -224,7 +222,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 Text(
-                  '${_gyroscopeValues[2].toStringAsFixed(2)}',
+                  _gyroscopeValues[2].toStringAsFixed(2),
                   style: const TextStyle(
                     color: Color.fromRGBO(0, 191, 229, 1),
                     fontSize: 16,
@@ -242,7 +240,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   fontWeight: FontWeight.w900,
                 )),
             Text(
-              '$_currentTime',
+              _currentTime,
               style: const TextStyle(
                 color: Color.fromRGBO(124, 124, 124, 1),
                 fontSize: 16,
@@ -259,7 +257,9 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             Text(
-              ' $_currentLocation ',
+              _currentPosition != null
+                  ? 'Latitude: ${_currentPosition!.latitude}, Longitude: ${_currentPosition!.longitude}'
+                  : 'Getting location...',
             ),
           ],
         ),
@@ -275,18 +275,36 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _getCurrentLocation() async {
-    final permissionStatus = await Permission.location.request();
+    bool serviceEnabled;
+    LocationPermission permission;
 
-    if (permissionStatus.isGranted) {
-      final position = await Geolocator.getCurrentPosition();
-      setState(() {
-        _currentLocation =
-            'LATITUDE: ${position.latitude}\n LONGITUDE: ${position.longitude}';
-      });
-    } else {
-      setState(() {
-        _currentLocation = 'Permission denied';
-      });
+    // Check if location services are enabled
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled, show error message
+      return;
     }
+
+    // Check location permission status
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      // Location permissions are denied, request permission
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Location permissions are still denied, show error message
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Location permissions are permanently denied, show error message
+      return;
+    }
+
+    // Get the current position
+    Position position = await Geolocator.getCurrentPosition();
+    setState(() {
+      _currentPosition = position;
+    });
   }
 }
