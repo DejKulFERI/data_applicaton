@@ -2,11 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'package:http/http.dart' as http;
 
-void main() async {
-  Socket socket = await Socket.connect('164.8.209.117', 8080);
-  socket.write('Hello, server!');
+void main() {
+  const url = 'http://164.8.209.117:3001/message';
+  const message = 'Hello, server!';
+
+  // Send the message as a JSON string in the request body
+  http
+      .post(Uri.parse(url), body: json.encode({'message': message}))
+      .then((response) {
+    if (response.statusCode == 200) {
+      // Successful response from the server
+      print('Message sent successfully');
+    } else {
+      // Error response from the server
+      print('Error sending message. Status code: ${response.statusCode}');
+    }
+  }).catchError((error) {
+    // Error occurred while sending the request
+    print('Error sending message: $error');
+  });
+
   runApp(const MyApp());
 }
 
