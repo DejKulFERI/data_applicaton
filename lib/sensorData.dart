@@ -261,7 +261,6 @@ class _MySensorDataState extends State<MySensorData>
     final now = DateTime.now();
     setState(() {
       _currentTime = '${now.hour}:${now.minute}:${now.second}';
-      debugPrint("a");
     });
   }
 
