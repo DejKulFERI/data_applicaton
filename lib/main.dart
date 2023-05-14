@@ -135,7 +135,7 @@ class _MyAppState extends State<MyApp> {
     });
 
     _timerForFillArray =
-        Timer.periodic(const Duration(milliseconds: 10), (Timer t) {
+        Timer.periodic(const Duration(milliseconds: 100), (Timer t) {
       tempAccelerometerX.add(_accelerometerValues[0]);
       tempAccelerometerY.add(_accelerometerValues[1]);
       tempAccelerometerZ.add(_accelerometerValues[2]);
