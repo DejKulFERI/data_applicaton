@@ -91,6 +91,34 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  double calculateSmoothnessRating(List<double> accelerometerX,
+      List<double> accelerometerY, List<double> accelerometerZ) {
+    // Calculate the magnitude of acceleration
+    List<double> magnitudes = [];
+    for (int i = 0; i < accelerometerX.length; i++) {
+      double magnitude = sqrt(pow(accelerometerX[i], 2) +
+          pow(accelerometerY[i], 2) +
+          pow(accelerometerZ[i], 2));
+      magnitudes.add(magnitude);
+    }
+
+    // Normalize the magnitudes to the range [0, 1]
+    double maxMagnitude = magnitudes.reduce(max);
+    List<double> normalizedMagnitudes =
+        magnitudes.map((magnitude) => magnitude / maxMagnitude).toList();
+
+    // Map the normalized magnitudes to the range [0, 100] for the smoothness rating
+    List<double> ratings =
+        normalizedMagnitudes.map((magnitude) => magnitude * 100).toList();
+
+    // Calculate the average rating
+    double averageRating = ratings.isNotEmpty
+        ? ratings.reduce((a, b) => a + b) / ratings.length
+        : 0.0;
+
+    return averageRating;
+  }
+
   // Declare globally accessible variables for sensor data and location
   List<double> _accelerometerValues = [0, 0, 0];
   List<double> _gyroscopeValues = [0, 0, 0];
@@ -102,9 +130,6 @@ class _MyAppState extends State<MyApp> {
 
     _timer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
       _getCurrentLocation();
-
-      // new deviceData... change func to take argument devData
-      Random random = Random();
 
       debugPrint("Temp Acc X: $tempAccelerometerX");
 
@@ -119,7 +144,8 @@ class _MyAppState extends State<MyApp> {
         longitude: _currentPosition?.longitude ?? 0.0,
         timestamp: DateTime.now(),
         user: user.id,
-        rating: random.nextDouble() * 100,
+        rating: calculateSmoothnessRating(
+            tempAccelerometerX, tempAccelerometerY, tempAccelerometerZ),
       );
 
       debugPrint(dataToSend.toString());
