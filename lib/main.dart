@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -7,11 +8,21 @@ import 'package:data_application/map.dart';
 import 'package:data_application/classDeviceData.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:data_application/classUser.dart';
 
 String title = "Map";
 
+User user = User(
+  id: '6460efa250efaf7d824e2190',
+  username: 'dbencak',
+  email: 'domy.bencak@gmail.com',
+  password: '\$2b\$10\$krm2pjxoToD7MAqw2800C./FqkbeopoFQIgQcE94jN3MZku4eFoUG',
+  faceImagePath: '',
+  faceFeaturesPath: '',
+);
+
 void main() {
-  const url = 'http://164.8.209.117:3001/message';
+  /*const url = 'http://164.8.209.117:3001/message';
   const message = 'Hello, server!';
 
   // Send the message as a JSON string in the request body
@@ -28,7 +39,7 @@ void main() {
   }).catchError((error) {
     // Error occurred while sending the request
     print('Error sending message: $error');
-  });
+  });*/
 
   runApp(const MaterialApp(home: MyApp()));
 }
@@ -42,7 +53,15 @@ class MyApp extends MaterialApp {
 
 class _MyAppState extends State<MyApp> {
   Timer? _timer;
+  Timer? _timerForFillArray;
   DeviceData? _deviceData;
+
+  List<double> tempAccelerometerX = [];
+  List<double> tempAccelerometerY = [];
+  List<double> tempAccelerometerZ = [];
+  List<double> tempGyroscopeX = [];
+  List<double> tempGyroscopeY = [];
+  List<double> tempGyroscopeZ = [];
 
   void sendDataToServer(DeviceData deviceData) async {
     const url = 'http://164.8.209.117:3001/message';
@@ -80,8 +99,49 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
-      _sendDataToServer();
+
+    _timer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+      _getCurrentLocation();
+
+      // new deviceData... change func to take argument devData
+      Random random = Random();
+
+      debugPrint("Temp Acc X: $tempAccelerometerX");
+
+      DeviceData dataToSend = DeviceData(
+        accelerometerX: tempAccelerometerX,
+        accelerometerY: tempAccelerometerY,
+        accelerometerZ: tempAccelerometerZ,
+        gyroscopeX: tempGyroscopeX,
+        gyroscopeY: tempGyroscopeY,
+        gyroscopeZ: tempGyroscopeZ,
+        latitude: _currentPosition?.latitude ?? 0.0,
+        longitude: _currentPosition?.longitude ?? 0.0,
+        timestamp: DateTime.now(),
+        user: user.id,
+        rating: random.nextDouble() * 100,
+      );
+
+      debugPrint(dataToSend.toString());
+
+      _sendDataToServer(dataToSend);
+
+      tempAccelerometerX.clear();
+      tempAccelerometerY.clear();
+      tempAccelerometerZ.clear();
+      tempGyroscopeX.clear();
+      tempGyroscopeY.clear();
+      tempGyroscopeZ.clear();
+    });
+
+    _timerForFillArray =
+        Timer.periodic(const Duration(milliseconds: 10), (Timer t) {
+      tempAccelerometerX.add(_accelerometerValues[0]);
+      tempAccelerometerY.add(_accelerometerValues[1]);
+      tempAccelerometerZ.add(_accelerometerValues[2]);
+      tempGyroscopeX.add(_gyroscopeValues[0]);
+      tempGyroscopeY.add(_gyroscopeValues[1]);
+      tempGyroscopeZ.add(_gyroscopeValues[2]);
     });
 
     // Register listeners for accelerometer and gyroscope events
@@ -108,6 +168,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     _timer?.cancel();
+    _timerForFillArray?.cancel();
     super.dispose();
   }
 
@@ -139,22 +200,11 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  void _sendDataToServer() {
+  void _sendDataToServer(DeviceData dataToSend) {
     // Create a DeviceData object with the required values
-    final deviceData = DeviceData(
-      accelerometerX: _accelerometerValues[0],
-      accelerometerY: _accelerometerValues[1],
-      accelerometerZ: _accelerometerValues[2],
-      gyroscopeX: _gyroscopeValues[0],
-      gyroscopeY: _gyroscopeValues[1],
-      gyroscopeZ: _gyroscopeValues[2],
-      latitude: _currentPosition?.latitude ?? 0,
-      longitude: _currentPosition?.longitude ?? 0,
-      timestamp: DateTime.now(),
-    );
 
     // Send the deviceData object to the server
-    sendDataToServer(deviceData);
+    sendDataToServer(dataToSend);
   }
 
   // ...
