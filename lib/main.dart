@@ -64,7 +64,7 @@ class _MyAppState extends State<MyApp> {
   List<double> tempGyroscopeZ = [];
 
   void sendDataToServer(DeviceData deviceData) async {
-    const url = 'http://164.8.209.117:3001/message';
+    const url = 'http://164.8.209.117:3001/deviceData';
 
     // Convert the deviceData object to a JSON string
     final jsonData = json.encode(deviceData.toJson());
