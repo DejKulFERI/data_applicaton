@@ -237,34 +237,40 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        actions: [
-          IconButton(onPressed: () {}, icon: Icon(Icons.data_array)),
-        ],
-      ),
-      body: pages[currentPage],
-      bottomNavigationBar: NavigationBar(
-        destinations: _destinations,
-        onDestinationSelected: (int index) {
-          setState(() {
-            currentPage = index;
-            title = _destinations[index].label;
-            switch (index) {
-              case 0:
-                _currentTheme = ThemeData(primarySwatch: Colors.green);
-                break;
-              case 1:
-                _currentTheme = ThemeData(primarySwatch: Colors.blue);
-                break;
-              case 2:
-                _currentTheme = ThemeData(primarySwatch: Colors.amber);
-                break;
-            }
-          });
-        },
-        selectedIndex: currentPage,
+    return MaterialApp(
+      theme: _currentTheme,
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text(title),
+          actions: [
+            IconButton(
+              onPressed: () {},
+              icon: Icon(Icons.data_array),
+            ),
+          ],
+        ),
+        body: pages[currentPage],
+        bottomNavigationBar: NavigationBar(
+          destinations: _destinations,
+          onDestinationSelected: (int index) {
+            setState(() {
+              currentPage = index;
+              title = _destinations[index].label;
+              switch (index) {
+                case 0:
+                  _currentTheme = ThemeData(primarySwatch: Colors.green);
+                  break;
+                case 1:
+                  _currentTheme = ThemeData(primarySwatch: Colors.blue);
+                  break;
+                case 2:
+                  _currentTheme = ThemeData(primarySwatch: Colors.amber);
+                  break;
+              }
+            });
+          },
+          selectedIndex: currentPage,
+        ),
       ),
     );
   }
