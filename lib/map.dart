@@ -9,7 +9,7 @@ class MyMap extends StatefulWidget {
   _MyMapState createState() => _MyMapState();
 }
 
-class _MyMapState extends State<MyMap> with TickerProviderStateMixin {
+class _MyMapState extends State<MyMap> {
   Position? _currentPosition;
   late MapController _mapController; // Changed to AnimatedMapController
   Timer? _timer;
