@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:data_application/register.dart';
 
-class LoginForm extends StatefulWidget {
+class RegisterForm extends StatefulWidget {
   @override
-  _LoginFormState createState() => _LoginFormState();
+  _RegisterFormState createState() => _RegisterFormState();
 }
 
-class LoginUser {
+class RegisterUser {
   String username;
   String password;
 
-  LoginUser({
+  RegisterUser({
     required this.username,
     required this.password,
   });
@@ -25,17 +24,18 @@ class LoginUser {
   }
 }
 
-class _LoginFormState extends State<LoginForm> {
+class _RegisterFormState extends State<RegisterForm> {
   final _formKey = GlobalKey<FormState>();
   String _username = '';
   String _password = '';
 
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      LoginUser loginUser = LoginUser(username: _username, password: _password);
-      const url = 'http://164.8.209.117:3001/user/loginMobile';
+      RegisterUser registerUser =
+          RegisterUser(username: _username, password: _password);
+      const url = 'http://164.8.209.117:3001/user';
 
-      final jsonData = json.encode(loginUser.toJson());
+      final jsonData = json.encode(registerUser.toJson());
 
       try {
         final response = await http.post(
@@ -45,31 +45,14 @@ class _LoginFormState extends State<LoginForm> {
         );
 
         if (response.statusCode == 200) {
-          // Login successful
-          print('Login successful');
+          // Registration successful
+          print('Registration successful');
           // Perform any necessary actions here (e.g., navigate to another page)
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
-              title: Text('Authentication Successfull'),
-              content: Text('You are now logged in.'),
-              actions: [
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('OK'),
-                ),
-              ],
-            ),
-          );
-        } else if (response.statusCode == 401) {
-          // Authentication failed
-          print('Wrong username or password');
-          // Display an error message to the user
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text('Authentication Failed'),
-              content: Text('Wrong username or password.'),
+              title: Text('Registration Successful'),
+              content: Text('You are now registered.'),
               actions: [
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context),
@@ -92,6 +75,10 @@ class _LoginFormState extends State<LoginForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.deepPurple,
+        title: Text('Register'),
+      ),
       body: Center(
         child: Container(
           padding: EdgeInsets.all(16.0),
@@ -100,7 +87,6 @@ class _LoginFormState extends State<LoginForm> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(height: 96.0),
                 TextFormField(
                   validator: (value) {
                     if (value!.isEmpty) {
@@ -140,18 +126,6 @@ class _LoginFormState extends State<LoginForm> {
                 SizedBox(height: 16.0),
                 ElevatedButton(
                   onPressed: _submitForm,
-                  child: Text('Log In'),
-                ),
-                SizedBox(height: 64.0),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => RegisterForm(),
-                      ),
-                    );
-                  },
                   child: Text('Register'),
                 ),
               ],
