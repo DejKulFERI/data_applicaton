@@ -100,7 +100,6 @@ class _LoginFormState extends State<LoginForm> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(height: 96.0),
                 TextFormField(
                   validator: (value) {
                     if (value!.isEmpty) {
@@ -142,7 +141,7 @@ class _LoginFormState extends State<LoginForm> {
                   onPressed: _submitForm,
                   child: Text('Log In'),
                 ),
-                SizedBox(height: 64.0),
+                SizedBox(height: 32.0),
                 TextButton(
                   onPressed: () {
                     Navigator.push(
