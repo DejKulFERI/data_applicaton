@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:data_application/login.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -54,7 +55,6 @@ class MyApp extends MaterialApp {
 class _MyAppState extends State<MyApp> {
   Timer? _timer;
   Timer? _timerForFillArray;
-  DeviceData? _deviceData;
 
   List<double> tempAccelerometerX = [];
   List<double> tempAccelerometerY = [];
@@ -68,7 +68,7 @@ class _MyAppState extends State<MyApp> {
 
     // Convert the deviceData object to a JSON string
     final jsonData = json.encode(deviceData.toJson());
-    debugPrint(jsonData.toString());
+    //debugPrint(jsonData.toString());
 
     try {
       // Send the JSON string in the request body with the correct Content-Type header
@@ -128,10 +128,11 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    _timer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+    // TODO - Temporary changed to fill array every 10 seconds to not fill db
+    _timer = Timer.periodic(const Duration(seconds: 10), (Timer t) {
       _getCurrentLocation();
 
-      debugPrint("Temp Acc X: $tempAccelerometerX");
+      //debugPrint("Temp Acc X: $tempAccelerometerX");
 
       DeviceData dataToSend = DeviceData(
         accelerometerX: tempAccelerometerX,
@@ -160,8 +161,9 @@ class _MyAppState extends State<MyApp> {
       tempGyroscopeZ.clear();
     });
 
+    // TODO - Temporary changed to fill array every second to not fill db
     _timerForFillArray =
-        Timer.periodic(const Duration(milliseconds: 100), (Timer t) {
+        Timer.periodic(const Duration(milliseconds: 1000), (Timer t) {
       tempAccelerometerX.add(_accelerometerValues[0]);
       tempAccelerometerY.add(_accelerometerValues[1]);
       tempAccelerometerZ.add(_accelerometerValues[2]);
@@ -203,7 +205,7 @@ class _MyAppState extends State<MyApp> {
   List<Widget> pages = [
     MySensorData(title: "Sensor data"),
     MyMap(),
-    MySensorData(title: "Profile")
+    LoginForm()
   ];
   final List<NavigationDestination> _destinations = [
     const NavigationDestination(
@@ -264,7 +266,7 @@ class _MyAppState extends State<MyApp> {
                   _currentTheme = ThemeData(primarySwatch: Colors.blue);
                   break;
                 case 2:
-                  _currentTheme = ThemeData(primarySwatch: Colors.amber);
+                  _currentTheme = ThemeData(primarySwatch: Colors.deepPurple);
                   break;
               }
             });
