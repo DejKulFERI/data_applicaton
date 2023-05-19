@@ -10,41 +10,30 @@ import 'package:data_application/classDeviceData.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:data_application/classUser.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 String title = "Map";
 
-User user = User(
-  id: '6460efa250efaf7d824e2190',
-  username: 'dbencak',
-  email: 'domy.bencak@gmail.com',
-  password: '\$2b\$10\$krm2pjxoToD7MAqw2800C./FqkbeopoFQIgQcE94jN3MZku4eFoUG',
-  faceImagePath: '',
-  faceFeaturesPath: '',
-);
+User? user;
 
-void main() {
-  /*const url = 'http://164.8.209.117:3001/message';
-  const message = 'Hello, server!';
+bool isLoggedIn = false;
 
-  // Send the message as a JSON string in the request body
-  http
-      .post(Uri.parse(url), body: json.encode({'message': message}))
-      .then((response) {
-    if (response.statusCode == 200) {
-      // Successful response from the server
-      print('Message sent successfully');
-    } else {
-      // Error response from the server
-      print('Error sending message. Status code: ${response.statusCode}');
-    }
-  }).catchError((error) {
-    // Error occurred while sending the request
-    print('Error sending message: $error');
-  });*/
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Retrieve the saved user from shared preferences
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? userJson = prefs.getString('user');
+
+  if (userJson != null) {
+    user = User.fromJson(json.decode(userJson));
+  }
+  if (user != null) isLoggedIn = true;
 
   runApp(const MaterialApp(home: MyApp()));
 }
 
+// DELETE USER!=0 FROM ALL BUT SNED
 class MyApp extends MaterialApp {
   const MyApp({super.key});
 
@@ -66,9 +55,29 @@ class _MyAppState extends State<MyApp> {
   void sendDataToServer(DeviceData deviceData) async {
     const url = 'http://164.8.209.117:3001/deviceData';
 
+    // Replace NaN values with 0.0
+    deviceData.accelerometerX = deviceData.accelerometerX
+        .map((value) => value.isNaN ? 0.0 : value)
+        .toList();
+    deviceData.accelerometerY = deviceData.accelerometerY
+        .map((value) => value.isNaN ? 0.0 : value)
+        .toList();
+    deviceData.accelerometerZ = deviceData.accelerometerZ
+        .map((value) => value.isNaN ? 0.0 : value)
+        .toList();
+    deviceData.gyroscopeX = deviceData.gyroscopeX
+        .map((value) => value.isNaN ? 0.0 : value)
+        .toList();
+    deviceData.gyroscopeY = deviceData.gyroscopeY
+        .map((value) => value.isNaN ? 0.0 : value)
+        .toList();
+    deviceData.gyroscopeZ = deviceData.gyroscopeZ
+        .map((value) => value.isNaN ? 0.0 : value)
+        .toList();
+    if (deviceData.rating.isNaN) deviceData.rating = 0.0;
+
     // Convert the deviceData object to a JSON string
     final jsonData = json.encode(deviceData.toJson());
-    //debugPrint(jsonData.toString());
 
     try {
       // Send the JSON string in the request body with the correct Content-Type header
@@ -93,6 +102,13 @@ class _MyAppState extends State<MyApp> {
 
   double calculateSmoothnessRating(List<double> accelerometerX,
       List<double> accelerometerY, List<double> accelerometerZ) {
+    if (accelerometerX.length != accelerometerY.length ||
+        accelerometerY.length != accelerometerZ.length ||
+        accelerometerX.isEmpty) {
+      // Return a default value or throw an exception, depending on your requirements
+      return 0.0;
+    }
+
     // Calculate the magnitude of acceleration
     List<double> magnitudes = [];
     for (int i = 0; i < accelerometerX.length; i++) {
@@ -114,7 +130,7 @@ class _MyAppState extends State<MyApp> {
     // Calculate the average rating
     double averageRating = ratings.isNotEmpty
         ? ratings.reduce((a, b) => a + b) / ratings.length
-        : 0.0;
+        : 0.1;
 
     return averageRating;
   }
@@ -129,10 +145,17 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     // TODO - Temporary changed to fill array every 10 seconds to not fill db
-    _timer = Timer.periodic(const Duration(seconds: 10), (Timer t) {
+    _timer = Timer.periodic(const Duration(seconds: 10), (Timer t) async {
       _getCurrentLocation();
 
       //debugPrint("Temp Acc X: $tempAccelerometerX");
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? userJson = prefs.getString('user');
+
+      if (userJson != null) {
+        user = User.fromJson(json.decode(userJson));
+      }
 
       DeviceData dataToSend = DeviceData(
         accelerometerX: tempAccelerometerX,
@@ -144,14 +167,12 @@ class _MyAppState extends State<MyApp> {
         latitude: _currentPosition?.latitude ?? 0.0,
         longitude: _currentPosition?.longitude ?? 0.0,
         timestamp: DateTime.now(),
-        user: user.id,
+        user: user?.id ?? '',
         rating: calculateSmoothnessRating(
             tempAccelerometerX, tempAccelerometerY, tempAccelerometerZ),
       );
 
-      debugPrint(dataToSend.toString());
-
-      _sendDataToServer(dataToSend);
+      if (isLoggedIn) _sendDataToServer(dataToSend);
 
       tempAccelerometerX.clear();
       tempAccelerometerY.clear();
@@ -164,6 +185,7 @@ class _MyAppState extends State<MyApp> {
     // TODO - Temporary changed to fill array every second to not fill db
     _timerForFillArray =
         Timer.periodic(const Duration(milliseconds: 1000), (Timer t) {
+      //debugPrint("isLoggedIn: ${isLoggedIn}");
       tempAccelerometerX.add(_accelerometerValues[0]);
       tempAccelerometerY.add(_accelerometerValues[1]);
       tempAccelerometerZ.add(_accelerometerValues[2]);
@@ -202,6 +224,7 @@ class _MyAppState extends State<MyApp> {
 
   ThemeData _currentTheme = ThemeData(primarySwatch: Colors.blue);
   int currentPage = 1;
+
   List<Widget> pages = [
     MySensorData(title: "Sensor data"),
     MyMap(),

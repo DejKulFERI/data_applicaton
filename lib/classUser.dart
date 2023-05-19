@@ -14,4 +14,15 @@ class User {
     required this.faceImagePath,
     required this.faceFeaturesPath,
   });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['_id'],
+      username: json['username'],
+      email: json['email'],
+      password: json['password'] ?? '',
+      faceImagePath: json['faceImagePath'] ?? '',
+      faceFeaturesPath: json['faceFeaturesPath'] ?? '',
+    );
+  }
 }

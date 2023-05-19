@@ -23,6 +23,7 @@ dependencies:
   location: ^4.4.0
   latlong2: ^0.8.1
   flutter_map_animations: ^0.3.0
+  shared_preferences: ^2.1.1
 
 dev_dependencies:
   flutter_test:
