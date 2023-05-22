@@ -15,6 +15,13 @@ class _MyMapState extends State<MyMap> {
   late MapController _mapController; // Changed to AnimatedMapController
   Timer? _timer;
   bool isCentered = true;
+  Marker? marker = Marker(
+    point: LatLng(
+      0.0,
+      0.0,
+    ),
+    builder: (context) => const Icon(Icons.my_location_rounded),
+  );
 
   @override
   void initState() {
@@ -45,8 +52,8 @@ class _MyMapState extends State<MyMap> {
 
   @override
   void dispose() {
-    super.dispose();
     _timer?.cancel();
+    super.dispose();
   }
 
   void _getCurrentLocation() async {
@@ -57,6 +64,13 @@ class _MyMapState extends State<MyMap> {
       if (mounted) {
         setState(() {
           _currentPosition = position;
+          marker = Marker(
+            point: LatLng(
+              position.latitude,
+              position.longitude,
+            ),
+            builder: (context) => const Icon(Icons.my_location_rounded),
+          );
         });
       }
     } catch (e) {
@@ -135,13 +149,7 @@ class _MyMapState extends State<MyMap> {
             ),
             MarkerLayer(
               markers: [
-                Marker(
-                  point: LatLng(
-                    position?.latitude ?? 0,
-                    position?.longitude ?? 0,
-                  ),
-                  builder: (context) => const Icon(Icons.my_location_rounded),
-                ),
+                marker!,
               ],
             ),
           ],

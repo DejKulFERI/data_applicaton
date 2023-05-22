@@ -202,14 +202,40 @@ class ProfilePage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const Text(
+              'Username:',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 8),
             Text(
-              'User ID: $userId',
-              style: const TextStyle(fontSize: 24),
+              username,
+              style: const TextStyle(
+                color: Color.fromRGBO(124, 124, 124, 1),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 16),
+            const Text(
+              'User ID:',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 8),
             Text(
-              'Username: $username',
-              style: const TextStyle(fontSize: 24),
+              userId,
+              style: const TextStyle(
+                color: Color.fromRGBO(124, 124, 124, 1),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 16),
             ElevatedButton(

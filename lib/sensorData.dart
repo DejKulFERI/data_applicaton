@@ -250,7 +250,7 @@ class _MySensorDataState extends State<MySensorData>
               _currentPosition != null
                   ? 'Latitude: ${_currentPosition!.latitude}\nLongitude: ${_currentPosition!.longitude}'
                   : 'Getting location...',
-              style: TextStyle(
+              style: const TextStyle(
                 color: Color.fromRGBO(124, 124, 124, 1),
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
