@@ -64,8 +64,6 @@ class _LoginFormState extends State<LoginForm> {
         if (response.statusCode == 200) {
           // Login successful
 
-          //debugPrint("RESPONSE: ${response.body}");
-
           // Save user locally
           SharedPreferences prefs = await SharedPreferences.getInstance();
           var userJson = json.decode(response.body)['user'];
@@ -75,6 +73,8 @@ class _LoginFormState extends State<LoginForm> {
               isLoggedIn = true;
               User loggedInUser = User.fromJson(json.decode(userJson));
               user = loggedInUser;
+              userId = user?.id ?? '';
+              username = user?.username ?? '';
             });
           } else {
             // Handle the case where 'user' is null
@@ -82,7 +82,23 @@ class _LoginFormState extends State<LoginForm> {
           }
         } else if (response.statusCode == 401) {
           // Authentication failed
-          print('Wrong username or password');
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Authentication Failed'),
+                content: Text('Wrong username or password.'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
         } else {
           // Error response from the server
           print('Error sending data. Status code: ${response.statusCode}');
@@ -180,8 +196,6 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Access the user ID and username from the global 'user' variable
-    String userId = user?.id ?? '';
-    String username = user?.username ?? '';
 
     return Scaffold(
       body: Center(
@@ -208,3 +222,6 @@ class ProfilePage extends StatelessWidget {
     );
   }
 }
+
+String userId = user?.id ?? '';
+String username = user?.username ?? '';

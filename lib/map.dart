@@ -11,6 +11,7 @@ class MyMap extends StatefulWidget {
 
 class _MyMapState extends State<MyMap> {
   Position? _currentPosition;
+  Future<Position?>? _currentPositionFuture;
   late MapController _mapController; // Changed to AnimatedMapController
   Timer? _timer;
   bool isCentered = true;
@@ -21,6 +22,8 @@ class _MyMapState extends State<MyMap> {
     _getCurrentLocation();
 
     _mapController = MapController();
+
+    _currentPositionFuture = _getCurrentLocationFuture();
 
     _timer = Timer.periodic(const Duration(milliseconds: 1000), (Timer t) {
       _getCurrentLocation();
@@ -61,69 +64,87 @@ class _MyMapState extends State<MyMap> {
     }
   }
 
+  Future<Position?> _getCurrentLocationFuture() async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.best,
+      );
+      return position;
+    } catch (e) {
+      print('Error getting current location: $e');
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        body: Center(
-          child: SizedBox(
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                center: LatLng(
-                  _currentPosition?.latitude ?? 0,
-                  _currentPosition?.longitude ?? 0,
-                ),
-                zoom: 17,
-                onPointerUp: (a, b) {
-                  setState(() {
-                    isCentered = false;
-                  });
-                },
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.example.data_application',
-                  additionalOptions: const {
-                    'accessToken':
-                        'pk.eyJ1IjoiZGJlbmNhayIsImEiOiJjbGhtYXBhY2gxYTJ3M2NueHg2cDdiNDFrIn0.ZhEWmoS3j-tS230DXRrNlQ',
-                    'id': 'mapbox.satellite',
-                  },
-                ),
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: LatLng(
-                        _currentPosition?.latitude ?? 0,
-                        _currentPosition?.longitude ?? 0,
-                      ),
-                      builder: (context) =>
-                          const Icon(Icons.my_location_rounded),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+        body: FutureBuilder<Position?>(
+          future: _currentPositionFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else {
+              final position = snapshot.data;
+              return _buildMap(position);
+            }
+          },
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
-            // Center and zoom to the user's current location
-            if (_currentPosition != null) {
-              setState(() {
-                isCentered = true;
-                _mapController.move(
-                  LatLng(
-                    _currentPosition!.latitude,
-                    _currentPosition!.longitude,
-                  ),
-                  17,
-                );
-              });
-            }
+            _currentPositionFuture = _getCurrentLocationFuture();
+            setState(() {
+              isCentered = true;
+            });
           },
           child: const Icon(Icons.my_location),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMap(Position? position) {
+    return Center(
+      child: SizedBox(
+        child: FlutterMap(
+          mapController: _mapController,
+          options: MapOptions(
+            center: LatLng(
+              position?.latitude ?? 0,
+              position?.longitude ?? 0,
+            ),
+            zoom: 17,
+            onPointerUp: (a, b) {
+              setState(() {
+                isCentered = false;
+              });
+            },
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.example.data_application',
+              additionalOptions: const {
+                'accessToken':
+                    'pk.eyJ1IjoiZGJlbmNhayIsImEiOiJjbGhtYXBhY2gxYTJ3M2NueHg2cDdiNDFrIn0.ZhEWmoS3j-tS230DXRrNlQ',
+                'id': 'mapbox.satellite',
+              },
+            ),
+            MarkerLayer(
+              markers: [
+                Marker(
+                  point: LatLng(
+                    position?.latitude ?? 0,
+                    position?.longitude ?? 0,
+                  ),
+                  builder: (context) => const Icon(Icons.my_location_rounded),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

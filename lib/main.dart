@@ -144,7 +144,6 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    // TODO - Temporary changed to fill array every 10 seconds to not fill db
     _timer = Timer.periodic(const Duration(seconds: 10), (Timer t) async {
       _getCurrentLocation();
 
@@ -182,9 +181,8 @@ class _MyAppState extends State<MyApp> {
       tempGyroscopeZ.clear();
     });
 
-    // TODO - Temporary changed to fill array every second to not fill db
     _timerForFillArray =
-        Timer.periodic(const Duration(milliseconds: 1000), (Timer t) {
+        Timer.periodic(const Duration(milliseconds: 100), (Timer t) {
       //debugPrint("isLoggedIn: ${isLoggedIn}");
       tempAccelerometerX.add(_accelerometerValues[0]);
       tempAccelerometerY.add(_accelerometerValues[1]);
