@@ -28,7 +28,11 @@ void main() async {
   if (userJson != null) {
     user = User.fromJson(json.decode(userJson));
   }
-  if (user != null) isLoggedIn = true;
+  if (user != null) {
+    isLoggedIn = true;
+    userId = user?.id ?? '';
+    username = user?.username ?? '';
+  }
 
   runApp(const MaterialApp(home: MyApp()));
 }

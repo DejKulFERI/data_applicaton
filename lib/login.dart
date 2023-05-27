@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -32,6 +33,17 @@ class _LoginFormState extends State<LoginForm> {
   final _formKey = GlobalKey<FormState>();
   String _username = '';
   String _password = '';
+  Timer? _timer;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    _timer = Timer.periodic(const Duration(milliseconds: 500), (Timer t) async {
+      userId = user?.id ?? '';
+      username = user?.username ?? '';
+    });
+    super.initState();
+  }
 
   void _logout() async {
     // Logout successful
@@ -39,7 +51,7 @@ class _LoginFormState extends State<LoginForm> {
 
     // Clear user data from shared preferences
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('user');
+    await prefs.clear();
 
     setState(() {
       isLoggedIn = false;

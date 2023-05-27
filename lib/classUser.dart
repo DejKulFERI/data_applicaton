@@ -19,7 +19,7 @@ class User {
     return User(
       id: json['_id'],
       username: json['username'],
-      email: json['email'],
+      email: json['email'] ?? '',
       password: json['password'] ?? '',
       faceImagePath: json['faceImagePath'] ?? '',
       faceFeaturesPath: json['faceFeaturesPath'] ?? '',
