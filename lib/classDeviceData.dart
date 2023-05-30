@@ -10,6 +10,7 @@ class DeviceData {
   DateTime timestamp;
   String user;
   double rating;
+  String carRideId;
 
   DeviceData({
     required this.accelerometerX,
@@ -23,6 +24,7 @@ class DeviceData {
     required this.timestamp,
     required this.user,
     required this.rating,
+    required this.carRideId,
   });
 
   Map<String, dynamic> toJson() {
@@ -38,6 +40,7 @@ class DeviceData {
       'timestamp': timestamp.toIso8601String(),
       'user': user,
       'rating': rating,
+      'carRideId': carRideId,
     };
   }
 
@@ -53,7 +56,6 @@ class DeviceData {
         '  latitude: $latitude,\n'
         '  longitude: $longitude,\n'
         '  timestamp: $timestamp,\n'
-        '  user: $user,\n'
         '  rating: $rating\n'
         '}';
   }
