@@ -58,7 +58,9 @@ class _MyAppState extends State<MyApp> {
   List<double> tempGyroscopeZ = [];
 
   void sendDataToServer(DeviceData deviceData) async {
-    const url = 'http://164.8.209.117:3001/deviceData';
+    //const url = 'http://164.8.209.117:3001/deviceData';
+    //const url = 'http://127.0.0.1:3001/deviceData';
+    const url = "http://169.254.99.207:3001/deviceData"; // local FOR EMULATOR
 
     // Replace NaN values with 0.0
     deviceData.accelerometerX = deviceData.accelerometerX
@@ -176,7 +178,7 @@ class _MyAppState extends State<MyApp> {
             tempAccelerometerX, tempAccelerometerY, tempAccelerometerZ),
       );
 
-      if (isLoggedIn) _sendDataToServer(dataToSend);
+      //if (isLoggedIn) _sendDataToServer(dataToSend);
 
       tempAccelerometerX.clear();
       tempAccelerometerY.clear();
@@ -259,7 +261,7 @@ class _MyAppState extends State<MyApp> {
     // Create a DeviceData object with the required values
 
     // Send the deviceData object to the server
-    sendDataToServer(dataToSend);
+    //sendDataToServer(dataToSend);
   }
 
   // ...
