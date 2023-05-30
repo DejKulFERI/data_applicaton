@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:data_application/login.dart';
+import 'package:data_application/startRide.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -229,13 +230,14 @@ class _MyAppState extends State<MyApp> {
 
   List<Widget> pages = [
     MySensorData(title: "Sensor data"),
-    MyMap(),
+    //MyMap(),
+    StartRide(),
     LoginForm()
   ];
   final List<NavigationDestination> _destinations = [
     const NavigationDestination(
         icon: Icon(Icons.data_object_rounded), label: "Sensor Data"),
-    const NavigationDestination(icon: Icon(Icons.home), label: "Map"),
+    const NavigationDestination(icon: Icon(Icons.home), label: "Ride"),
     const NavigationDestination(icon: Icon(Icons.person), label: "Profile"),
   ];
 

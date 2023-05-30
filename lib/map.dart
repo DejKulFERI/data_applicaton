@@ -94,6 +94,15 @@ class _MyMapState extends State<MyMap> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        appBar: AppBar(
+          title: Text('Map Page'),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ),
         body: FutureBuilder<Position?>(
           future: _currentPositionFuture,
           builder: (context, snapshot) {
