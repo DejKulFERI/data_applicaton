@@ -62,10 +62,9 @@ class _LoginFormState extends State<LoginForm> {
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       LoginUser loginUser = LoginUser(username: _username, password: _password);
-      //const url = 'http://164.8.209.117:3001/user/loginMobile';
+      const url = 'http://164.8.209.117:3001/user/loginMobile';
       //const url = 'http://127.0.0.1:3001/user/loginMobile';
-      const url =
-          "http://169.254.99.207:3001/user/loginMobile"; // local FOR EMULATOR
+      //const url = "http://169.254.99.207:3001/user/loginMobile"; // local FOR EMULATOR - Aljaz
 
       final jsonData = json.encode(loginUser.toJson());
 
