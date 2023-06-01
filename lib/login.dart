@@ -151,24 +151,6 @@ class _LoginFormState extends State<LoginForm> {
                   TextFormField(
                     validator: (value) {
                       if (value!.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      return null;
-                    },
-                    onChanged: (value) {
-                      setState(() {
-                        _email = value;
-                      });
-                    },
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Email',
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextFormField(
-                    validator: (value) {
-                      if (value!.isEmpty) {
                         return 'Please enter your username';
                       }
                       return null;
