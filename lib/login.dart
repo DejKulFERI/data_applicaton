@@ -15,16 +15,19 @@ class LoginForm extends StatefulWidget {
 class LoginUser {
   String username;
   String password;
+  String email;
 
   LoginUser({
     required this.username,
     required this.password,
+    required this.email,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'username': username,
       'password': password,
+      'email': email,
     };
   }
 }
@@ -33,6 +36,7 @@ class _LoginFormState extends State<LoginForm> {
   final _formKey = GlobalKey<FormState>();
   String _username = '';
   String _password = '';
+  String _email = '';
   Timer? _timer;
 
   @override
@@ -41,6 +45,7 @@ class _LoginFormState extends State<LoginForm> {
     _timer = Timer.periodic(const Duration(milliseconds: 500), (Timer t) async {
       userId = user?.id ?? '';
       username = user?.username ?? '';
+      email = user?.email ?? '';
     });
     super.initState();
   }
@@ -61,10 +66,12 @@ class _LoginFormState extends State<LoginForm> {
 
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      LoginUser loginUser = LoginUser(username: _username, password: _password);
-      const url = 'http://164.8.209.117:3001/user/loginMobile';
+      LoginUser loginUser =
+          LoginUser(username: _username, password: _password, email: _email);
+      //const url = 'http://164.8.209.117:3001/user/loginMobile';
       //const url = 'http://127.0.0.1:3001/user/loginMobile';
-      //const url = "http://169.254.99.207:3001/user/loginMobile"; // local FOR EMULATOR - Aljaz
+      const url =
+          "http://169.254.156.211:3001/user/loginMobile"; // local FOR EMULATOR - Aljaz
 
       final jsonData = json.encode(loginUser.toJson());
 
@@ -82,13 +89,15 @@ class _LoginFormState extends State<LoginForm> {
           SharedPreferences prefs = await SharedPreferences.getInstance();
           var userJson = json.decode(response.body)['user'];
           if (userJson != null) {
+            print("Logged in successfully ${_username}");
             prefs.setString('user', json.encode(userJson));
             setState(() {
               isLoggedIn = true;
-              User loggedInUser = User.fromJson(json.decode(userJson));
+              User loggedInUser = User.fromJson(userJson);
               user = loggedInUser;
               userId = user?.id ?? '';
               username = user?.username ?? '';
+              email = user?.email ?? '';
             });
           } else {
             // Handle the case where 'user' is null
@@ -100,14 +109,14 @@ class _LoginFormState extends State<LoginForm> {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: Text('Authentication Failed'),
-                content: Text('Wrong username or password.'),
+                title: const Text('Authentication Failed'),
+                content: const Text('Wrong username or password.'),
                 actions: [
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text('OK'),
+                    child: const Text('OK'),
                   ),
                 ],
               );
@@ -139,6 +148,24 @@ class _LoginFormState extends State<LoginForm> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  TextFormField(
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      setState(() {
+                        _email = value;
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Email',
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
                   TextFormField(
                     validator: (value) {
                       if (value!.isEmpty) {
@@ -217,6 +244,24 @@ class ProfilePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
+              'Email:',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              email,
+              style: const TextStyle(
+                color: Color.fromRGBO(124, 124, 124, 1),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
               'Username:',
               style: TextStyle(
                 color: Colors.black,
@@ -265,3 +310,4 @@ class ProfilePage extends StatelessWidget {
 
 String userId = user?.id ?? '';
 String username = user?.username ?? '';
+String email = user?.email ?? '';
