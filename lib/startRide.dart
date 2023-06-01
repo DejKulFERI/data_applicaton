@@ -13,6 +13,7 @@ class StartRide extends StatefulWidget {
 
 class _StartRideState extends State<StartRide> {
   //URL to connect to server and send a request to create new carRide
+  // Changed how data is received on server end to present data on the website for real-time tracking
 
   @override
   Widget build(BuildContext context) {
