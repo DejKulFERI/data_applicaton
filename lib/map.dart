@@ -163,7 +163,7 @@ class _MyMapState extends State<MyMap> with WidgetsBindingObserver {
 
     createRide();
 
-    _timer = Timer.periodic(const Duration(seconds: 10), (Timer t) async {
+    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) async {
       _getCurrentLocation();
 
       //debugPrint("Temp Acc X: $tempAccelerometerX");
@@ -311,7 +311,7 @@ class _MyMapState extends State<MyMap> with WidgetsBindingObserver {
     if (createdCarRideId == "") {
       //const url = 'http://164.8.209.117:3001/carRide/';
       //const url = 'http://127.0.0.1:3001/';
-      const url = "http://169.254.99.207:3001/carRide"; // local FOR EMULATOR
+      const url = "http://164.8.209.117:3001/carRide/"; // local FOR EMULATOR
       print("Trying to create carRide");
 
       // Retrieve the logged-in user from shared preferences
