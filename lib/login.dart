@@ -6,6 +6,9 @@ import 'package:data_application/register.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:data_application/main.dart';
 import 'package:data_application/classUser.dart';
+import 'dart:io';
+import 'package:camera/camera.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class LoginForm extends StatefulWidget {
   @override
@@ -38,6 +41,29 @@ class _LoginFormState extends State<LoginForm> {
   String _password = '';
   String _email = '';
   Timer? _timer;
+  late CameraController _cameraController;
+  List<CameraDescription> _cameras = [];
+  bool _isCameraInitialized = false;
+
+  Future<void> _requestCameraPermission() async {
+    final status = await Permission.camera.request();
+    if (status.isGranted) {
+      // Permission granted
+    } else {
+      // Permission denied
+      if (status.isPermanentlyDenied) {
+        // The user denied permission permanently, navigate to app settings
+        openAppSettings();
+      } else {
+        // The user denied permission, show a snackbar or display a message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Camera permission denied'),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -48,6 +74,50 @@ class _LoginFormState extends State<LoginForm> {
       email = user?.email ?? '';
     });
     super.initState();
+  }
+
+  /*@override
+  void initState() {
+    super.initState();
+    _requestCameraPermission().then((_) {
+      _initializeCamera().then((_) {
+        _timer =
+            Timer.periodic(const Duration(milliseconds: 500), (Timer t) async {
+          userId = user?.id ?? '';
+          username = user?.username ?? '';
+          email = user?.email ?? '';
+        });
+      });
+    });
+  }*/
+
+  @override
+  void dispose() {
+    _cameraController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initializeCamera() async {
+    _cameras = await availableCameras();
+    _cameraController = CameraController(_cameras[0], ResolutionPreset.medium);
+
+    try {
+      await _cameraController.initialize();
+    } catch (e) {
+      print('Error initializing camera: $e');
+    }
+
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  void _openCamera() async {
+    await _requestCameraPermission();
+    await _initializeCamera();
+
+    setState(() {
+      _isCameraInitialized = true;
+    });
   }
 
   void _logout() async {
@@ -140,6 +210,7 @@ class _LoginFormState extends State<LoginForm> {
         "http://169.254.117.251:3001/python/checkFace"; // local FOR EMULATOR - Aljaz
 
     try {
+      _openCamera();
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final jsonResponse = response.body;
@@ -213,6 +284,14 @@ class _LoginFormState extends State<LoginForm> {
                     onPressed: sendFaceRequest,
                     child: const Text('Log In using FaceId'),
                   ),
+                  if (_isCameraInitialized)
+                    SizedBox(
+                      width: 150,
+                      height: 200,
+                      child: CameraPreview(_cameraController!),
+                    )
+                  else
+                    Container(),
                   const SizedBox(height: 32.0),
                   TextButton(
                     onPressed: () {

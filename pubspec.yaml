@@ -25,6 +25,7 @@ dependencies:
   flutter_map_animations: ^0.3.0
   shared_preferences: ^2.1.1
   ffi: ^2.0.2
+  camera: ^0.10.0
 
 dev_dependencies:
   flutter_test:

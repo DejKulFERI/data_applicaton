@@ -53,5 +53,7 @@
 	<string>Your location is required to provide accurate data.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>Your location is required to provide accurate data.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is required to capture photos for facial recognition.</string>
 </dict>
 </plist>
