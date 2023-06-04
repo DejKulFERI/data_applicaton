@@ -68,10 +68,9 @@ class _LoginFormState extends State<LoginForm> {
     if (_formKey.currentState!.validate()) {
       LoginUser loginUser =
           LoginUser(username: _username, password: _password, email: _email);
-      //const url = 'http://164.8.209.117:3001/user/loginMobile';
+      const url = 'http://164.8.209.117:3001/user/loginMobile';
       //const url = 'http://127.0.0.1:3001/user/loginMobile';
-      const url =
-          "http://169.254.156.211:3001/user/loginMobile"; // local FOR EMULATOR - Aljaz
+      //const url = "http://169.254.156.211:3001/user/loginMobile"; // local FOR EMULATOR - Aljaz
 
       final jsonData = json.encode(loginUser.toJson());
 
@@ -134,6 +133,27 @@ class _LoginFormState extends State<LoginForm> {
     setState(() {});
   }
 
+  void sendFaceRequest() async {
+    //const url = 'http://164.8.209.117:3001/python/checkFace';
+    //const url = 'http://127.0.0.1:3001/user/loginMobile';
+    const url =
+        "http://169.254.117.251:3001/python/checkFace"; // local FOR EMULATOR - Aljaz
+
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final jsonResponse = response.body;
+        print('Response: $jsonResponse');
+        // Process the response as needed
+      } else {
+        print('Request failed with status: ${response.statusCode}');
+      }
+    } catch (error) {
+      // Error occurred while sending the request
+      print('Error sending data: $error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoggedIn) {
@@ -188,6 +208,10 @@ class _LoginFormState extends State<LoginForm> {
                   ElevatedButton(
                     onPressed: _submitForm,
                     child: const Text('Log In'),
+                  ),
+                  ElevatedButton(
+                    onPressed: sendFaceRequest,
+                    child: const Text('Log In using FaceId'),
                   ),
                   const SizedBox(height: 32.0),
                   TextButton(

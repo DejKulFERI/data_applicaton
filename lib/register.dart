@@ -36,10 +36,9 @@ class _RegisterFormState extends State<RegisterForm> {
     if (_formKey.currentState!.validate()) {
       RegisterUser registerUser =
           RegisterUser(username: _username, password: _password, email: _email);
-      //const url = 'http://164.8.209.117:3001/user';
+      const url = 'http://164.8.209.117:3001/user';
       //const url = 'http://127.0.0.1:3001/user';
-      const url =
-          "http://169.254.156.211:3001/user/mobile"; // local FOR EMULATOR
+      //const url = "http://169.254.156.211:3001/user/mobile"; // local FOR EMULATOR
       final jsonData = json.encode(registerUser.toJson());
 
       try {
