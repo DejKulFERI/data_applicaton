@@ -204,10 +204,9 @@ class _LoginFormState extends State<LoginForm> {
   }
 
   void sendFaceRequest() async {
-    //const url = 'http://164.8.209.117:3001/python/checkFace';
+    const url = 'http://164.8.209.117:3001/python/checkFace';
     //const url = 'http://127.0.0.1:3001/user/loginMobile';
-    const url =
-        "http://169.254.117.251:3001/python/checkFace"; // local FOR EMULATOR - Aljaz
+    //const url =        "http://169.254.117.251:3001/python/checkFace"; // local FOR EMULATOR - Aljaz
 
     try {
       _openCamera();
