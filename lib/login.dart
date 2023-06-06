@@ -431,10 +431,6 @@ class _LoginFormState extends State<LoginForm> {
                     onPressed: _submitForm,
                     child: const Text('Log In'),
                   ),
-                  ElevatedButton(
-                    onPressed: sendFaceRequest,
-                    child: const Text('Log In using FaceId'),
-                  ),
                   if (_isCameraInitialized)
                     Column(
                       children: [
