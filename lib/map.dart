@@ -47,11 +47,11 @@ class _MyMapState extends State<MyMap> with WidgetsBindingObserver {
   List<double> tempGyroscopeZ = [];
 
   void sendDataToServer(DeviceData deviceData) async {
-    //var url = 'http://164.8.209.117:3001/carRide/${createdCarRideId}/updateRideMobile';
+    var url =
+        'http://164.8.209.117:3001/carRide/${createdCarRideId}/updateRideMobile';
     //const url = 'http://127.0.0.1:3001/deviceData';
     //const url = "http://169.254.99.207:3001/deviceData"; // local FOR EMULATOR
-    var url =
-        "http://169.254.156.211:3001/carRide/${createdCarRideId}/updateRideMobile"; // - local testing - aljaz
+    //var url = "http://169.254.156.211:3001/carRide/${createdCarRideId}/updateRideMobile"; // - local testing - aljaz
 
     print("Trying to send data via url: ${url}");
 
@@ -309,9 +309,9 @@ class _MyMapState extends State<MyMap> with WidgetsBindingObserver {
 
   void createRide() async {
     if (createdCarRideId == "") {
-      //const url = 'http://164.8.209.117:3001/carRide/';
+      const url = 'http://164.8.209.117:3001/carRide/';
       //const url = 'http://127.0.0.1:3001/';
-      const url = "http://169.254.156.211:3001/carRide/"; // local FOR EMULATOR
+      //const url = "http://169.254.156.211:3001/carRide/"; // local FOR EMULATOR
       print("Trying to create carRide");
 
       // Retrieve the logged-in user from shared preferences

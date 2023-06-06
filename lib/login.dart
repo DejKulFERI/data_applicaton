@@ -12,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:async';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class LoginForm extends StatefulWidget {
   @override
@@ -50,6 +51,8 @@ class _LoginFormState extends State<LoginForm> {
   bool _isCameraInitialized = false;
   late Timer _cameraTimer;
 
+  String faceId = '';
+
   Future<void> _requestCameraPermission() async {
     final status = await Permission.camera.request();
     if (status.isGranted) {
@@ -78,10 +81,7 @@ class _LoginFormState extends State<LoginForm> {
       username = user?.username ?? '';
       email = user?.email ?? '';
     });
-    _cameraTimer = Timer(Duration(seconds: 1), () {
-      print('Calling takeAndSendPicture');
-      _takeAndSendPicture();
-    });
+
     super.initState();
     _initializeCamera();
   }
@@ -108,8 +108,8 @@ class _LoginFormState extends State<LoginForm> {
     super.dispose();
   }
 
-  void _takeAndSendPicture() async {
-    const url = "http://169.254.156.211:3001/python/checkFace";
+  Future<void> _takeAndSendPicture() async {
+    const url = "http://164.8.209.117:3001/python/checkFace";
 
     try {
       final XFile? imageFile = await _cameraController.takePicture();
@@ -140,18 +140,31 @@ class _LoginFormState extends State<LoginForm> {
         final String imagePath = imageFile.path;
         final File image = File(imagePath);
 
-        // Save the captured image to local storage
+        // Resize the image using flutter_image_compress
         final Directory appDirectory = await getApplicationDocumentsDirectory();
-        final String savedImagePath = '${appDirectory.path}/captured_image.jpg';
-        await image.copy(savedImagePath);
+        final String resizedImagePath =
+            '${appDirectory.path}/resized_image.jpg';
 
-        print('Image saved: $savedImagePath');
+        // Set the desired width and height for the resized image
+        final int desiredWidth = 360;
+        final int desiredHeight = 520;
 
-        final List<int> imageBytes = await image.readAsBytes();
+        // Resize the image and save it to local storage
+        await FlutterImageCompress.compressAndGetFile(
+          imagePath,
+          resizedImagePath,
+          minWidth: desiredWidth,
+          minHeight: desiredHeight,
+          quality: 90,
+        );
+
+        print('Image resized and saved: $resizedImagePath');
+
+        // Read the resized image as bytes
+        final List<int> imageBytes = await File(resizedImagePath).readAsBytes();
         final String base64Image = base64Encode(imageBytes);
 
-        final Uri url =
-            Uri.parse("http://169.254.156.211:3001/python/checkFace");
+        final Uri url = Uri.parse("http://164.8.209.117:3001/python/checkFace");
         final http.Response response = await http.post(
           url,
           body: {'image': base64Image},
@@ -160,6 +173,7 @@ class _LoginFormState extends State<LoginForm> {
         if (response.statusCode == 200) {
           final jsonResponse = jsonDecode(response.body);
           print('Response: $jsonResponse');
+          faceId = jsonResponse['recognized_person'];
           // Process the response as needed
         } else {
           print('Request failed with status: ${response.statusCode}');
@@ -223,10 +237,9 @@ class _LoginFormState extends State<LoginForm> {
     if (_formKey.currentState!.validate()) {
       LoginUser loginUser =
           LoginUser(username: _username, password: _password, email: _email);
-      //const url = 'http://164.8.209.117:3001/user/loginMobile';
+      const url = 'http://164.8.209.117:3001/user/loginMobile';
       //const url = 'http://127.0.0.1:3001/user/loginMobile';
-      const url =
-          "http://169.254.156.211:3001/user/loginMobile"; // local FOR EMULATOR - Aljaz
+      //const url = "http://169.254.156.211:3001/user/loginMobile"; // local FOR EMULATOR - Aljaz
 
       final jsonData = json.encode(loginUser.toJson());
 
@@ -238,25 +251,45 @@ class _LoginFormState extends State<LoginForm> {
         );
 
         if (response.statusCode == 200) {
+          await _takeAndSendPicture();
           // Login successful
-
-          // Save user locally
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          var userJson = json.decode(response.body)['user'];
-          if (userJson != null) {
-            print("Logged in successfully ${_username}");
-            prefs.setString('user', json.encode(userJson));
-            setState(() {
-              isLoggedIn = true;
-              User loggedInUser = User.fromJson(userJson);
-              user = loggedInUser;
-              userId = user?.id ?? '';
-              username = user?.username ?? '';
-              email = user?.email ?? '';
-            });
+          if (faceId == _username) {
+            // Save user locally
+            SharedPreferences prefs = await SharedPreferences.getInstance();
+            var userJson = json.decode(response.body)['user'];
+            if (userJson != null) {
+              print("Logged in successfully ${_username}");
+              prefs.setString('user', json.encode(userJson));
+              setState(() {
+                isLoggedIn = true;
+                User loggedInUser = User.fromJson(userJson);
+                user = loggedInUser;
+                userId = user?.id ?? '';
+                username = user?.username ?? '';
+                email = user?.email ?? '';
+              });
+            } else {
+              // Handle the case where 'user' is null
+              print('User data is null');
+            }
           } else {
-            // Handle the case where 'user' is null
-            print('User data is null');
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text('Authentication Failed'),
+                  content: const Text('2FA failed. Please try again.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text('OK'),
+                    ),
+                  ],
+                );
+              },
+            );
           }
         } else if (response.statusCode == 401) {
           // Authentication failed
@@ -290,10 +323,9 @@ class _LoginFormState extends State<LoginForm> {
   }
 
   void sendFaceRequest() async {
-    //const url = 'http://164.8.209.117:3001/python/checkFace';
+    const url = 'http://164.8.209.117:3001/python/checkFace';
     //const url = 'http://127.0.0.1:3001/user/loginMobile';
-    const url =
-        "http://169.254.156.211:3001/python/checkFace"; // local FOR EMULATOR - Aljaz
+    //const url = "http://169.254.156.211:3001/python/checkFace"; // local FOR EMULATOR - Aljaz
 
     /*try {
       await _requestCameraPermission();

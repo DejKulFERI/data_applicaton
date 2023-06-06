@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class RegisterForm extends StatefulWidget {
   @override
@@ -68,10 +69,9 @@ class _RegisterFormState extends State<RegisterForm> {
     if (_formKey.currentState!.validate()) {
       RegisterUser registerUser =
           RegisterUser(username: _username, password: _password, email: _email);
-      //const url = 'http://164.8.209.117:3001/user';
+      const url = 'http://164.8.209.117:3001/user/mobile';
       //const url = 'http://127.0.0.1:3001/user';
-      const url =
-          "http://169.254.156.211:3001/user/mobile"; // local FOR EMULATOR
+      //const url = "http://169.254.156.211:3001/user/mobile"; // local FOR EMULATOR
       final jsonData = json.encode(registerUser.toJson());
 
       try {
@@ -90,20 +90,34 @@ class _RegisterFormState extends State<RegisterForm> {
               final String imagePath = imageFile.path;
               final File image = File(imagePath);
 
-              // Save the captured image to local storage
+              // Resize the image using flutter_image_compress
               final Directory appDirectory =
                   await getApplicationDocumentsDirectory();
-              final String savedImagePath =
-                  path.join(appDirectory.path, 'captured_image.jpg');
-              await image.copy(savedImagePath);
+              final String resizedImagePath =
+                  '${appDirectory.path}/resized_image.jpg';
 
-              print('Image saved: $savedImagePath');
+              // Set the desired width and height for the resized image
+              final int desiredWidth = 360;
+              final int desiredHeight = 520;
 
-              final List<int> imageBytes = await image.readAsBytes();
+              // Resize the image and save it to local storage
+              await FlutterImageCompress.compressAndGetFile(
+                imagePath,
+                resizedImagePath,
+                minWidth: desiredWidth,
+                minHeight: desiredHeight,
+                quality: 90,
+              );
+
+              print('Image resized and saved: $resizedImagePath');
+
+              // Read the resized image as bytes
+              final List<int> imageBytes =
+                  await File(resizedImagePath).readAsBytes();
               final String base64Image = base64Encode(imageBytes);
 
               final Uri url =
-                  Uri.parse("http://169.254.156.211:3001/python/createFace");
+                  Uri.parse("http://164.8.209.117:3001/python/createFace");
               final http.Response response = await http.post(
                 url,
                 body: {'image': base64Image, 'username': _username},
