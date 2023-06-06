@@ -9,6 +9,9 @@ import 'package:data_application/classUser.dart';
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:async';
 
 class LoginForm extends StatefulWidget {
   @override
@@ -41,9 +44,11 @@ class _LoginFormState extends State<LoginForm> {
   String _password = '';
   String _email = '';
   Timer? _timer;
+
   late CameraController _cameraController;
-  List<CameraDescription> _cameras = [];
+  late List<CameraDescription> _cameras;
   bool _isCameraInitialized = false;
+  late Timer _cameraTimer;
 
   Future<void> _requestCameraPermission() async {
     final status = await Permission.camera.request();
@@ -73,7 +78,12 @@ class _LoginFormState extends State<LoginForm> {
       username = user?.username ?? '';
       email = user?.email ?? '';
     });
+    _cameraTimer = Timer(Duration(seconds: 1), () {
+      print('Calling takeAndSendPicture');
+      _takeAndSendPicture();
+    });
     super.initState();
+    _initializeCamera();
   }
 
   /*@override
@@ -93,13 +103,95 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   void dispose() {
+    _cameraTimer.cancel();
     _cameraController.dispose();
     super.dispose();
   }
 
+  void _takeAndSendPicture() async {
+    const url = "http://169.254.156.211:3001/python/checkFace";
+
+    try {
+      final XFile? imageFile = await _cameraController.takePicture();
+
+      if (imageFile != null) {
+        /*final Directory appDirectory = await getApplicationDocumentsDirectory();
+        final String imagePath = '${appDirectory.path}/image.jpg';
+        final File savedImageFile = File(imagePath);
+        await savedImageFile.writeAsBytes(await imageFile.readAsBytes());
+
+        final String base64Image =
+            base64Encode(savedImageFile.readAsBytesSync());
+
+        final Uri url =
+            Uri.parse("http://169.254.156.211:3001/python/checkFace");
+        final http.Response response = await http.post(
+          url,
+          body: {'image': base64Image},
+        );
+
+        if (response.statusCode == 200) {
+          final jsonResponse = jsonDecode(response.body);
+          print('Response: $jsonResponse');
+          // Process the response as needed
+        } else {
+          print('Request failed with status: ${response.statusCode}');
+        }*/
+        final String imagePath = imageFile.path;
+        final File image = File(imagePath);
+
+        // Save the captured image to local storage
+        final Directory appDirectory = await getApplicationDocumentsDirectory();
+        final String savedImagePath = '${appDirectory.path}/captured_image.jpg';
+        await image.copy(savedImagePath);
+
+        print('Image saved: $savedImagePath');
+
+        final List<int> imageBytes = await image.readAsBytes();
+        final String base64Image = base64Encode(imageBytes);
+
+        final Uri url =
+            Uri.parse("http://169.254.156.211:3001/python/checkFace");
+        final http.Response response = await http.post(
+          url,
+          body: {'image': base64Image},
+        );
+
+        if (response.statusCode == 200) {
+          final jsonResponse = jsonDecode(response.body);
+          print('Response: $jsonResponse');
+          // Process the response as needed
+        } else {
+          print('Request failed with status: ${response.statusCode}');
+        }
+      } else {
+        print('No image captured');
+      }
+    } catch (error) {
+      print('Error sending data: $error');
+    }
+    /*try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final jsonResponse = response.body;
+        print('Response: $jsonResponse');
+
+        // Process the final response message
+        print('Received success response!');
+      } else {
+        print('Request failed with status: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error sending request: $error');
+    }*/
+  }
+
   Future<void> _initializeCamera() async {
     _cameras = await availableCameras();
-    _cameraController = CameraController(_cameras[0], ResolutionPreset.medium);
+    _cameraController = CameraController(
+        _cameras.firstWhere(
+            (camera) => camera.lensDirection == CameraLensDirection.front),
+        ResolutionPreset.medium);
 
     try {
       await _cameraController.initialize();
@@ -108,13 +200,6 @@ class _LoginFormState extends State<LoginForm> {
     }
 
     if (!mounted) return;
-    setState(() {});
-  }
-
-  void _openCamera() async {
-    await _requestCameraPermission();
-    await _initializeCamera();
-
     setState(() {
       _isCameraInitialized = true;
     });
@@ -138,9 +223,10 @@ class _LoginFormState extends State<LoginForm> {
     if (_formKey.currentState!.validate()) {
       LoginUser loginUser =
           LoginUser(username: _username, password: _password, email: _email);
-      const url = 'http://164.8.209.117:3001/user/loginMobile';
+      //const url = 'http://164.8.209.117:3001/user/loginMobile';
       //const url = 'http://127.0.0.1:3001/user/loginMobile';
-      //const url = "http://169.254.156.211:3001/user/loginMobile"; // local FOR EMULATOR - Aljaz
+      const url =
+          "http://169.254.156.211:3001/user/loginMobile"; // local FOR EMULATOR - Aljaz
 
       final jsonData = json.encode(loginUser.toJson());
 
@@ -207,21 +293,54 @@ class _LoginFormState extends State<LoginForm> {
     //const url = 'http://164.8.209.117:3001/python/checkFace';
     //const url = 'http://127.0.0.1:3001/user/loginMobile';
     const url =
-        "http://169.254.117.251:3001/python/checkFace"; // local FOR EMULATOR - Aljaz
+        "http://169.254.156.211:3001/python/checkFace"; // local FOR EMULATOR - Aljaz
 
-    try {
+    /*try {
+      await _requestCameraPermission();
+      await _initializeCamera(); // Initialize the camera before opening it
+
       _openCamera();
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final jsonResponse = response.body;
-        print('Response: $jsonResponse');
-        // Process the response as needed
+      print('Taking picture');
+      final XFile? imageFile = await _cameraController
+          .takePicture(); // Take a picture using the camera
+
+      if (imageFile != null) {
+        print('Image captured');
+        final Directory appDirectory = await getApplicationDocumentsDirectory();
+        final String imagePath =
+            '${appDirectory.path}/image.jpg'; // Set the path to save the image
+
+        final File savedImageFile = File(imagePath);
+        await savedImageFile.writeAsBytes(await imageFile
+            .readAsBytes()); // Save the picture to the specified path
+
+        final response =
+            await http.post(Uri.parse(url), body: {'image': imagePath});
+        if (response.statusCode == 200) {
+          final jsonResponse = response.body;
+          print('Response: $jsonResponse');
+          // Process the response as needed
+        } else {
+          print('Request failed with status: ${response.statusCode}');
+        }
       } else {
-        print('Request failed with status: ${response.statusCode}');
+        print('No image captured');
       }
     } catch (error) {
       // Error occurred while sending the request
       print('Error sending data: $error');
+    }*/
+
+    try {
+      // Ensure that the camera is initialized.
+      //await _initializeCamera;
+
+      // Attempt to take a picture and then get the location
+      // where the image file is saved.
+      //final image = await _cameraController.takePicture();
+    } catch (e) {
+      // If an error occurs, log the error to the console.
+      print(e);
     }
   }
 
@@ -285,13 +404,19 @@ class _LoginFormState extends State<LoginForm> {
                     child: const Text('Log In using FaceId'),
                   ),
                   if (_isCameraInitialized)
-                    SizedBox(
-                      width: 150,
-                      height: 200,
-                      child: CameraPreview(_cameraController!),
+                    Column(
+                      children: [
+                        Container(
+                          width: 150,
+                          height: 200,
+                          child: CameraPreview(_cameraController),
+                        ),
+                      ],
                     )
                   else
-                    Container(),
+                    const Center(
+                      child: CircularProgressIndicator(),
+                    ),
                   const SizedBox(height: 32.0),
                   TextButton(
                     onPressed: () {
