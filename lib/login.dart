@@ -39,7 +39,7 @@ class LoginUser {
   }
 }
 
-class _LoginFormState extends State<LoginForm> {
+class _LoginFormState extends State<LoginForm> with WidgetsBindingObserver {
   final _formKey = GlobalKey<FormState>();
   String _username = '';
   String _password = '';
@@ -75,6 +75,7 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   void initState() {
+    debugPrint('initState');
     // TODO: implement initState
     _timer = Timer.periodic(const Duration(milliseconds: 500), (Timer t) async {
       userId = user?.id ?? '';
@@ -84,6 +85,15 @@ class _LoginFormState extends State<LoginForm> {
 
     super.initState();
     _initializeCamera();
+    WidgetsBinding.instance?.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Handle app lifecycle changes
+    if (state == AppLifecycleState.resumed) {
+      _initializeCamera();
+    }
   }
 
   /*@override
@@ -103,8 +113,9 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   void dispose() {
-    _cameraTimer.cancel();
+    //_cameraTimer.cancel();
     _cameraController.dispose();
+    WidgetsBinding.instance?.removeObserver(this);
     super.dispose();
   }
 
@@ -146,8 +157,8 @@ class _LoginFormState extends State<LoginForm> {
             '${appDirectory.path}/resized_image.jpg';
 
         // Set the desired width and height for the resized image
-        final int desiredWidth = 360;
-        final int desiredHeight = 520;
+        final int desiredWidth = 240;
+        final int desiredHeight = 400;
 
         // Resize the image and save it to local storage
         await FlutterImageCompress.compressAndGetFile(
@@ -217,6 +228,11 @@ class _LoginFormState extends State<LoginForm> {
     setState(() {
       _isCameraInitialized = true;
     });
+    if (mounted) {
+      setState(() {
+        // Refresh the widget to display the camera preview
+      });
+    }
   }
 
   void _logout() async {
@@ -290,6 +306,75 @@ class _LoginFormState extends State<LoginForm> {
                 );
               },
             );
+          }
+        } else if (response.statusCode == 401) {
+          // Authentication failed
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Authentication Failed'),
+                content: const Text('Wrong username or password.'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
+        } else {
+          // Error response from the server
+          print('Error sending data. Status code: ${response.statusCode}');
+        }
+      } catch (error) {
+        // Error occurred while sending the request
+        print('Error sending data: $error');
+      }
+    }
+    setState(() {});
+  }
+
+  void _submitFormNoFaceID() async {
+    if (_formKey.currentState!.validate()) {
+      LoginUser loginUser =
+          LoginUser(username: _username, password: _password, email: _email);
+      const url = 'http://164.8.209.117:3001/user/loginMobile';
+      //const url = 'http://127.0.0.1:3001/user/loginMobile';
+      //const url = "http://169.254.156.211:3001/user/loginMobile"; // local FOR EMULATOR - Aljaz
+
+      final jsonData = json.encode(loginUser.toJson());
+
+      try {
+        final response = await http.post(
+          Uri.parse(url),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonData,
+        );
+
+        if (response.statusCode == 200) {
+          // Login successful
+
+          // Save user locally
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          var userJson = json.decode(response.body)['user'];
+          if (userJson != null) {
+            print("Logged in successfully ${_username}");
+            prefs.setString('user', json.encode(userJson));
+            setState(() {
+              isLoggedIn = true;
+              User loggedInUser = User.fromJson(userJson);
+              user = loggedInUser;
+              userId = user?.id ?? '';
+              username = user?.username ?? '';
+              email = user?.email ?? '';
+            });
+          } else {
+            // Handle the case where 'user' is null
+            print('User data is null');
           }
         } else if (response.statusCode == 401) {
           // Authentication failed
@@ -450,12 +535,23 @@ class _LoginFormState extends State<LoginForm> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => RegisterForm(),
-                        ),
-                      );
+                        MaterialPageRoute<bool>(
+                            builder: (context) => RegisterForm()),
+                      ).then((result) {
+                        if (result == true) {
+                          // Rebuild the login screen
+                          setState(() {
+                            // Perform any necessary state updates
+                            _initializeCamera();
+                          });
+                        }
+                      });
                     },
                     child: const Text('Register'),
+                  ),
+                  TextButton(
+                    onPressed: _submitFormNoFaceID,
+                    child: const Text('Login without FaceID'),
                   ),
                 ],
               ),

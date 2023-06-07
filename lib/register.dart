@@ -47,7 +47,7 @@ class _RegisterFormState extends State<RegisterForm> {
 
     _cameraController = CameraController(
       frontCamera,
-      ResolutionPreset.high,
+      ResolutionPreset.medium,
     );
 
     await _cameraController!.initialize();
@@ -97,8 +97,8 @@ class _RegisterFormState extends State<RegisterForm> {
                   '${appDirectory.path}/resized_image.jpg';
 
               // Set the desired width and height for the resized image
-              final int desiredWidth = 360;
-              final int desiredHeight = 520;
+              final int desiredWidth = 240;
+              final int desiredHeight = 400;
 
               // Resize the image and save it to local storage
               await FlutterImageCompress.compressAndGetFile(
@@ -169,6 +169,15 @@ class _RegisterFormState extends State<RegisterForm> {
       appBar: AppBar(
         backgroundColor: Colors.deepPurple,
         title: Text('Register'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            // Perform your custom action when the back button is pressed
+            // For example, you can navigate to a different screen or show a dialog
+            Navigator.pop(context, true);
+            // This will navigate back to the previous screen
+          },
+        ),
       ),
       body: Center(
         child: Container(
